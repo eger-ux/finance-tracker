@@ -1,0 +1,5 @@
+.env
+.env.*
+data/private/
+data/real/
+secrets/

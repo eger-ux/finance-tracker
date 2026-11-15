@@ -1,2 +1,8 @@
-# Project exclude paths
 /.venv/
+.env
+.env.*
+data/private/
+data/real/
+secrets/
+docs/
+agents.md
