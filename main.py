@@ -1,9 +1,6 @@
 import random
 import datetime
-import csv
 from csv import DictWriter, DictReader
-
-n, seed = input().split()
 
 merchants = {
     "Пятёрочка": "Продукты",
@@ -33,15 +30,54 @@ def generate_transactions(n, seed):
         transactions.append(i)
     return transactions
 
-with open("transactions.csv", 'w', encoding='utf-8', newline='') as csvfile:
-    writer = DictWriter(csvfile, fieldnames=["date", "merchant", "amount", "category"])
-    writer.writeheader()
-    writer.writerows(generate_transactions(int(n), seed))
 
-with open('transactions.csv', 'r', encoding='utf-8', newline='') as csvfile:
-    reader = DictReader(csvfile)
-    for row in reader:
-        print(row)
+def write_transactions(file_path, new_path):
+    with open(f"{new_path}", 'w', encoding='utf-8', newline='') as csvfile:
+        writer = DictWriter(csvfile, fieldnames=["date", "merchant", "amount", "category"])
+        writer.writeheader()
+        writer.writerows(file_path)
 
 
+def load_transactions(path):
+    with open(f"{path}", 'r', encoding='utf-8', newline='') as file:
+        reader = DictReader(file)
+        n = 0
+        transactions = []
+        errors = []
+        for row in reader:
+            n += 1
+            if len([1 for i in row if row[i]]) != 4:
+                errors.append(f"Ошибка в строке {n}: пустое поле.")
+                continue
+            if list(row.keys()) != ["date", "merchant", "amount", "category"]:
+                errors.append(f"Ошибка в строке {n}: некорректный мерчант.")
+                continue
+
+            try:
+                d = row['date'].split('-')
+                if not(len(d) == 3 and len(d[0]) == 4 and len(d[1]) == len(d[2]) == 2):
+                    raise ValueError
+                d = list(map(int, d))
+                datetime.date(d[0], d[1], d[2])
+            except ValueError:
+                errors.append(f"Ошибка в строке {n}: некорректная дата.")
+                continue
+
+            try:
+                row["amount"] = int(row["amount"])
+            except ValueError:
+                errors.append(f"Ошибка в строке {n}: сумма не является числом.")
+                continue
+            else:
+                if row["amount"] <= 0:
+                    errors.append(f"Ошибка в строке {n}: сумма не положительна.")
+                    continue
+            transactions.append(row)
+        return transactions, errors
+
+
+if __name__ == "__main__":
+    n, seed = map(int, input().split())
+    write_transactions(generate_transactions(n, seed), "transactions.csv")
+    print(load_transactions("transactions.csv"))
 
